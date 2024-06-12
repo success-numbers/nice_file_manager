@@ -1,0 +1,16 @@
+
+version: '3.8'
+
+services:
+  ftp-server:
+    image: fauria/vsftpd
+    platform: linux/amd64  # Specify the platform to ensure compatibility
+    ports:
+      - "20:20"
+      - "21:21"
+      - "21100-21110:21100-21110"
+    volumes:
+      - ftp-data:/home/ftpuser/ftp
+
+volumes:
+  ftp-data:
