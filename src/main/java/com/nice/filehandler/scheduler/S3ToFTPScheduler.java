@@ -69,6 +69,9 @@ public class S3ToFTPScheduler {
             ftpClient.enterLocalPassiveMode();
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 
+            // Ensure the FTP directory exists
+            createFTPDirectoryIfNotExists(ftpClient, "/" + orderExportFTPDirectory);
+
             // List files in S3 bucket under 'OrderExports/NewOrders' folder
             String s3NewOrdersDirectory = orderExportDirectory + "/" + orderExportDataDirectory + "/";
             ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
@@ -91,7 +94,7 @@ public class S3ToFTPScheduler {
                     logger.info("Processing key = {}", key);
                     S3Object s3Object = amazonS3.getObject(bucketName, key);
                     try (InputStream inputStream = s3Object.getObjectContent()) {
-                        boolean ftpUploadSuccess = ftpClient.storeFile("~/" + orderExportFTPDirectory + "/" + fileName, inputStream);
+                        boolean ftpUploadSuccess = ftpClient.storeFile("/" + orderExportFTPDirectory + "/" + fileName, inputStream);
 
                         if (ftpUploadSuccess) {
                             logger.info("Uploaded to FTP: {}", key);
@@ -134,6 +137,25 @@ public class S3ToFTPScheduler {
         } catch (Exception e) {
             logger.error("Exception occurred while moving file in S3", e);
             return false;
+        }
+    }
+
+    private void createFTPDirectoryIfNotExists(FTPClient ftpClient, String dirPath) throws IOException {
+        String[] pathElements = dirPath.split("/");
+        if (pathElements.length > 0) {
+            StringBuilder path = new StringBuilder();
+            for (String singleDir : pathElements) {
+                if (!singleDir.isEmpty()) {
+                    path.append("/").append(singleDir);
+                    if (!ftpClient.changeWorkingDirectory(path.toString())) {
+                        if (ftpClient.makeDirectory(path.toString())) {
+                            logger.info("Created directory: {}", path.toString());
+                        } else {
+                            logger.error("Failed to create directory: {}", path.toString());
+                        }
+                    }
+                }
+            }
         }
     }
 }
