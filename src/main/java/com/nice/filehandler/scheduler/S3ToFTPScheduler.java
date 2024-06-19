@@ -38,6 +38,9 @@ public class S3ToFTPScheduler {
     @Value("${ORDER_EXPORT_DIRECTORY}")
     private String orderExportDirectory;
 
+    @Value("${ORDER_EXPORT_DATA_DIRECTORY}")
+    private String orderExportDataDirectory;
+
     @Value("${ORDER_EXPORT_PROCESSED_DIRECTORY}")
     private String orderExportProcessedDirectory;
 
@@ -57,7 +60,6 @@ public class S3ToFTPScheduler {
         uploadFilesFromS3ToFTP();
     }
 
-
     public void uploadFilesFromS3ToFTP() {
         FTPClient ftpClient = new FTPClient();
         try {
@@ -67,37 +69,35 @@ public class S3ToFTPScheduler {
             ftpClient.enterLocalPassiveMode();
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 
-            // List files in S3 bucket excluding "processed" folder
+            // List files in S3 bucket under 'OrderExports/NewOrders' folder
+            String s3NewOrdersDirectory = orderExportDirectory + "/" + orderExportDataDirectory + "/";
             ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
                     .withBucketName(bucketName)
-                    .withDelimiter("/" + orderExportDirectory)
-                    .withPrefix(""); // Start from the root
+                    .withPrefix(s3NewOrdersDirectory);
 
             ObjectListing objectListing;
             do {
                 objectListing = amazonS3.listObjects(listObjectsRequest);
                 List<S3ObjectSummary> s3ObjectSummaries = objectListing.getObjectSummaries();
 
-                logger.info("No of files in S3 to process = {}", s3ObjectSummaries.size());
+                // Filter out folders and non-XML files
+                s3ObjectSummaries.removeIf(summary -> summary.getKey().endsWith("/") || !summary.getKey().endsWith(".xml"));
+                logger.info("No of XML files in S3 to process = {}", s3ObjectSummaries.size());
 
                 for (S3ObjectSummary s3ObjectSummary : s3ObjectSummaries) {
                     String key = s3ObjectSummary.getKey();
                     String fileName = key.substring(key.lastIndexOf("/") + 1);
 
-                    // Skip files in the "processed" folder
-                    if (key.startsWith(orderExportProcessedDirectory)) {
-                        logger.info("Skipping file in processed folder: {}", key);
-                        continue;
-                    }
-
                     logger.info("Processing key = {}", key);
                     S3Object s3Object = amazonS3.getObject(bucketName, key);
                     try (InputStream inputStream = s3Object.getObjectContent()) {
-                        boolean ftpUploadSuccess = ftpClient.storeFile(orderExportFTPDirectory, inputStream);
+                        boolean ftpUploadSuccess = ftpClient.storeFile("~/" + orderExportFTPDirectory + "/" + fileName, inputStream);
+
                         if (ftpUploadSuccess) {
                             logger.info("Uploaded to FTP: {}", key);
-                            // Move file to "processed" folder
-                            String processedKey = orderExportProcessedDirectory + '/' + fileName;
+
+                            // Move file to 'OrderExports/Processed' folder
+                            String processedKey = orderExportDirectory + "/" + orderExportProcessedDirectory + "/" + fileName;
                             boolean s3MoveSuccess = moveFileInS3(bucketName, key, processedKey);
                             if (s3MoveSuccess) {
                                 logger.info("Moved to processed folder in S3: {}", processedKey);
@@ -129,7 +129,7 @@ public class S3ToFTPScheduler {
     private boolean moveFileInS3(String bucketName, String sourceKey, String destinationKey) {
         try {
             amazonS3.copyObject(bucketName, sourceKey, bucketName, destinationKey);
-            amazonS3.deleteObject(bucketName, destinationKey);
+            amazonS3.deleteObject(bucketName, sourceKey);
             return true;
         } catch (Exception e) {
             logger.error("Exception occurred while moving file in S3", e);
