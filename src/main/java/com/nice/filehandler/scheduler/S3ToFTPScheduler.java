@@ -35,7 +35,14 @@ public class S3ToFTPScheduler {
     @Value("${AWS_S3_BUCKET_NAME}")
     private String bucketName;
 
-    private final String processedFolder = "processed/";
+    @Value("${ORDER_EXPORT_DIRECTORY}")
+    private String orderExportDirectory;
+
+    @Value("${ORDER_EXPORT_PROCESSED_DIRECTORY}")
+    private String orderExportProcessedDirectory;
+
+    @Value("${ORDER_EXPORT_FTP_DIRECTORY}")
+    private String orderExportFTPDirectory;
 
     @Scheduled(fixedRate = 10000) // Run every 10 seconds
     public void scheduleFileUpload() {
@@ -63,7 +70,7 @@ public class S3ToFTPScheduler {
             // List files in S3 bucket excluding "processed" folder
             ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
                     .withBucketName(bucketName)
-                    .withDelimiter("/")
+                    .withDelimiter("/" + orderExportDirectory)
                     .withPrefix(""); // Start from the root
 
             ObjectListing objectListing;
@@ -75,9 +82,10 @@ public class S3ToFTPScheduler {
 
                 for (S3ObjectSummary s3ObjectSummary : s3ObjectSummaries) {
                     String key = s3ObjectSummary.getKey();
+                    String fileName = key.substring(key.lastIndexOf("/") + 1);
 
                     // Skip files in the "processed" folder
-                    if (key.startsWith(processedFolder)) {
+                    if (key.startsWith(orderExportProcessedDirectory)) {
                         logger.info("Skipping file in processed folder: {}", key);
                         continue;
                     }
@@ -85,14 +93,14 @@ public class S3ToFTPScheduler {
                     logger.info("Processing key = {}", key);
                     S3Object s3Object = amazonS3.getObject(bucketName, key);
                     try (InputStream inputStream = s3Object.getObjectContent()) {
-                        boolean ftpUploadSuccess = ftpClient.storeFile(key, inputStream);
+                        boolean ftpUploadSuccess = ftpClient.storeFile(orderExportFTPDirectory, inputStream);
                         if (ftpUploadSuccess) {
                             logger.info("Uploaded to FTP: {}", key);
                             // Move file to "processed" folder
-                            String processedKey = processedFolder + key;
+                            String processedKey = orderExportProcessedDirectory + '/' + fileName;
                             boolean s3MoveSuccess = moveFileInS3(bucketName, key, processedKey);
                             if (s3MoveSuccess) {
-                                logger.info("Moved to processed folder in S3: {}", key);
+                                logger.info("Moved to processed folder in S3: {}", processedKey);
                             } else {
                                 logger.error("Failed to move to processed folder in S3: {}", key);
                             }
@@ -121,7 +129,7 @@ public class S3ToFTPScheduler {
     private boolean moveFileInS3(String bucketName, String sourceKey, String destinationKey) {
         try {
             amazonS3.copyObject(bucketName, sourceKey, bucketName, destinationKey);
-            amazonS3.deleteObject(bucketName, sourceKey);
+            amazonS3.deleteObject(bucketName, destinationKey);
             return true;
         } catch (Exception e) {
             logger.error("Exception occurred while moving file in S3", e);
