@@ -8,59 +8,44 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.nice.filehandler.config.FTPConfig;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-@Component
-public class S3ToFTPScheduler {
-
-    private static final Logger logger = LoggerFactory.getLogger(S3ToFTPScheduler.class);
-
-    @Autowired
-    private FTPConfig ftpConfig;
-
-    @Autowired
-    private AmazonS3 amazonS3;
-
-    @Value("${AWS_S3_BUCKET_NAME}")
-    private String bucketName;
-
-    @Value("${ORDER_EXPORT_DIRECTORY}")
-    private String orderExportDirectory;
-
-    @Value("${ORDER_EXPORT_DATA_DIRECTORY}")
-    private String orderExportDataDirectory;
-
-    @Value("${ORDER_EXPORT_PROCESSED_DIRECTORY}")
-    private String orderExportProcessedDirectory;
-
-    @Value("${ORDER_EXPORT_FTP_DIRECTORY}")
-    private String orderExportFTPDirectory;
-
-    @Scheduled(fixedRate = 10000) // Run every 10 seconds
-    public void scheduleFileUpload() {
-        // Get current system time
-        LocalDateTime currentTime = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-        // Log the cron job running along with the current system time
-        logger.info("Cron job running at time = {}", formatter.format(currentTime));
-
-        // Call the method to upload files from S3 to FTP
-        uploadFilesFromS3ToFTP();
+public class Utils {
+    public static void createFTPDirectoryIfNotExists(FTPClient ftpClient, String dirPath, Logger logger) throws IOException {
+        String[] pathElements = dirPath.split("/");
+        if (pathElements.length > 0) {
+            StringBuilder path = new StringBuilder();
+            for (String singleDir : pathElements) {
+                if (!singleDir.isEmpty()) {
+                    path.append("/").append(singleDir);
+                    if (!ftpClient.changeWorkingDirectory(path.toString())) {
+                        if (ftpClient.makeDirectory(path.toString())) {
+                            logger.info("Created directory: {}", path.toString());
+                        } else {
+                            logger.error("Failed to create directory: {}", path.toString());
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    public void uploadFilesFromS3ToFTP() {
+    public static boolean moveFileInS3(String bucketName, String sourceKey, String destinationKey, AmazonS3 amazonS3, Logger logger) {
+        try {
+            amazonS3.copyObject(bucketName, sourceKey, bucketName, destinationKey);
+            amazonS3.deleteObject(bucketName, sourceKey);
+            return true;
+        } catch (Exception e) {
+            logger.error("Exception occurred while moving file in S3", e);
+            return false;
+        }
+    }
+
+    public static void uploadFilesFromS3ToFTP(String bucketName, String rootDirectory, String dataDirectory, String processedDirectory, String ftpDirectory, FTPConfig ftpConfig, AmazonS3 amazonS3, Logger logger) {
         FTPClient ftpClient = new FTPClient();
         try {
             // Connect to FTP server
@@ -70,10 +55,10 @@ public class S3ToFTPScheduler {
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 
             // Ensure the FTP directory exists
-            createFTPDirectoryIfNotExists(ftpClient, "/" + orderExportFTPDirectory);
+            Utils.createFTPDirectoryIfNotExists(ftpClient, "/" + ftpDirectory, logger);
 
             // List files in S3 bucket under 'OrderExports/NewOrders' folder
-            String s3NewOrdersDirectory = orderExportDirectory + "/" + orderExportDataDirectory + "/";
+            String s3NewOrdersDirectory = rootDirectory + "/" + dataDirectory + "/";
             ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
                     .withBucketName(bucketName)
                     .withPrefix(s3NewOrdersDirectory);
@@ -94,14 +79,14 @@ public class S3ToFTPScheduler {
                     logger.info("Processing key = {}", key);
                     S3Object s3Object = amazonS3.getObject(bucketName, key);
                     try (InputStream inputStream = s3Object.getObjectContent()) {
-                        boolean ftpUploadSuccess = ftpClient.storeFile("/" + orderExportFTPDirectory + "/" + fileName, inputStream);
+                        boolean ftpUploadSuccess = ftpClient.storeFile("/" + ftpDirectory + "/" + fileName, inputStream);
 
                         if (ftpUploadSuccess) {
                             logger.info("Uploaded to FTP: {}", key);
 
                             // Move file to 'OrderExports/Processed' folder
-                            String processedKey = orderExportDirectory + "/" + orderExportProcessedDirectory + "/" + fileName;
-                            boolean s3MoveSuccess = moveFileInS3(bucketName, key, processedKey);
+                            String processedKey = rootDirectory + "/" + processedDirectory + "/" + fileName;
+                            boolean s3MoveSuccess = Utils.moveFileInS3(bucketName, key, processedKey, amazonS3, logger);
                             if (s3MoveSuccess) {
                                 logger.info("Moved to processed folder in S3: {}", processedKey);
                             } else {
@@ -125,36 +110,6 @@ public class S3ToFTPScheduler {
                 }
             } catch (IOException ex) {
                 logger.error("Exception occurred while disconnecting FTP client", ex);
-            }
-        }
-    }
-
-    private boolean moveFileInS3(String bucketName, String sourceKey, String destinationKey) {
-        try {
-            amazonS3.copyObject(bucketName, sourceKey, bucketName, destinationKey);
-            amazonS3.deleteObject(bucketName, sourceKey);
-            return true;
-        } catch (Exception e) {
-            logger.error("Exception occurred while moving file in S3", e);
-            return false;
-        }
-    }
-
-    private void createFTPDirectoryIfNotExists(FTPClient ftpClient, String dirPath) throws IOException {
-        String[] pathElements = dirPath.split("/");
-        if (pathElements.length > 0) {
-            StringBuilder path = new StringBuilder();
-            for (String singleDir : pathElements) {
-                if (!singleDir.isEmpty()) {
-                    path.append("/").append(singleDir);
-                    if (!ftpClient.changeWorkingDirectory(path.toString())) {
-                        if (ftpClient.makeDirectory(path.toString())) {
-                            logger.info("Created directory: {}", path.toString());
-                        } else {
-                            logger.error("Failed to create directory: {}", path.toString());
-                        }
-                    }
-                }
             }
         }
     }
