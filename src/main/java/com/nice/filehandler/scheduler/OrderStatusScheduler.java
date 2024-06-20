@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Component
-public class OrderExportScheduler {
+public class OrderStatusScheduler {
 
-    private static final Logger logger = LoggerFactory.getLogger(OrderExportScheduler.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrderStatusScheduler.class);
 
     @Autowired
     private FTPConfig ftpConfig;
@@ -26,17 +26,17 @@ public class OrderExportScheduler {
     @Value("${AWS_S3_BUCKET_NAME}")
     private String bucketName;
 
-    @Value("${ORDER_EXPORT_ROOT_DIRECTORY}")
-    private String orderExportRootDirectory;
+    @Value("${ORDER_STATUS_ROOT_DIRECTORY}")
+    private String orderStatusRootDirectory;
 
-    @Value("${ORDER_EXPORT_DATA_DIRECTORY}")
-    private String orderExportDataDirectory;
+    @Value("${ORDER_STATUS_DATA_DIRECTORY}")
+    private String orderStatusDataDirectory;
 
-    @Value("${ORDER_EXPORT_PROCESSED_DIRECTORY}")
-    private String orderExportProcessedDirectory;
+    @Value("${ORDER_STATUS_PROCESSED_DIRECTORY}")
+    private String orderStatusProcessedDirectory;
 
-    @Value("${ORDER_EXPORT_FTP_DIRECTORY}")
-    private String orderExportFTPDirectory;
+    @Value("${ORDER_STATUS_FTP_DIRECTORY}")
+    private String orderStatusFTPDirectory;
 
     @Scheduled(fixedRate = 10000) // Run every 10 seconds
     public void scheduleFileUpload() {
@@ -45,9 +45,9 @@ public class OrderExportScheduler {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         // Log the cron job running along with the current system time
-        logger.info("OrderExportScheduler cron job running at time = {}", formatter.format(currentTime));
+        logger.info("OrderStatusScheduler cron job running at time = {}", formatter.format(currentTime));
 
         // Call the method to upload files from S3 to FTP
-        Utils.uploadFilesFromS3ToFTP(bucketName, orderExportRootDirectory, orderExportDataDirectory, orderExportProcessedDirectory, orderExportFTPDirectory, ftpConfig, amazonS3, logger);
+        Utils.uploadFilesFromS3ToFTP(bucketName, orderStatusRootDirectory, orderStatusDataDirectory, orderStatusProcessedDirectory, orderStatusFTPDirectory, ftpConfig, amazonS3, logger);
     }
 }
