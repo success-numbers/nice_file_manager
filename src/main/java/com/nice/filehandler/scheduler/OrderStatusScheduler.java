@@ -38,7 +38,10 @@ public class OrderStatusScheduler {
     @Value("${ORDER_STATUS_FTP_DIRECTORY}")
     private String orderStatusFTPDirectory;
 
-    @Scheduled(fixedRate = 10000) // Run every 10 seconds
+    @Value("${KEY_TO_PROCESS_BATCH_SIZE}")
+    private Integer KEY_TO_PROCESS_BATCH_SIZE;
+
+    @Scheduled(fixedRate = 20000) // Run every 20 seconds
     public void scheduleFileUpload() {
         // Get current system time
         LocalDateTime currentTime = LocalDateTime.now();
@@ -48,6 +51,6 @@ public class OrderStatusScheduler {
         logger.info("OrderStatusScheduler cron job running at time = {}", formatter.format(currentTime));
 
         // Call the method to upload files from S3 to FTP
-        Utils.uploadFilesFromS3ToFTP(bucketName, orderStatusRootDirectory, orderStatusDataDirectory, orderStatusProcessedDirectory, orderStatusFTPDirectory, ftpConfig, amazonS3, logger);
+        Utils.uploadFilesFromS3ToFTP(bucketName, orderStatusRootDirectory, orderStatusDataDirectory, orderStatusProcessedDirectory, orderStatusFTPDirectory, KEY_TO_PROCESS_BATCH_SIZE, ftpConfig, amazonS3, logger);
     }
 }

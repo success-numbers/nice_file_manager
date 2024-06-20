@@ -45,7 +45,7 @@ public class Utils {
         }
     }
 
-    public static void uploadFilesFromS3ToFTP(String bucketName, String rootDirectory, String dataDirectory, String processedDirectory, String ftpDirectory, FTPConfig ftpConfig, AmazonS3 amazonS3, Logger logger) {
+    public static void uploadFilesFromS3ToFTP(String bucketName, String rootDirectory, String dataDirectory, String processedDirectory, String ftpDirectory, Integer KEY_TO_PROCESS_BATCH_SIZE, FTPConfig ftpConfig, AmazonS3 amazonS3, Logger logger) {
         FTPClient ftpClient = new FTPClient();
         try {
             // Connect to FTP server
@@ -61,7 +61,8 @@ public class Utils {
             String s3NewOrdersDirectory = rootDirectory + "/" + dataDirectory + "/";
             ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
                     .withBucketName(bucketName)
-                    .withPrefix(s3NewOrdersDirectory);
+                    .withPrefix(s3NewOrdersDirectory)
+                    .withMaxKeys(KEY_TO_PROCESS_BATCH_SIZE);
 
             ObjectListing objectListing;
             do {
@@ -69,7 +70,11 @@ public class Utils {
                 List<S3ObjectSummary> s3ObjectSummaries = objectListing.getObjectSummaries();
 
                 // Filter out folders and non-XML files
-                s3ObjectSummaries.removeIf(summary -> summary.getKey().endsWith("/") || !summary.getKey().endsWith(".xml"));
+                // s3ObjectSummaries.removeIf(summary -> summary.getKey().endsWith("/") || !summary.getKey().endsWith(".xml"));
+
+                // Filter out folders
+                s3ObjectSummaries.removeIf(summary -> summary.getKey().endsWith("/"));
+
                 logger.info("No of XML files in S3 to process = {}", s3ObjectSummaries.size());
 
                 for (S3ObjectSummary s3ObjectSummary : s3ObjectSummaries) {
