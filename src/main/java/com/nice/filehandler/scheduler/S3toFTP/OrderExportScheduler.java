@@ -1,4 +1,4 @@
-package com.nice.filehandler.scheduler;
+package com.nice.filehandler.scheduler.S3toFTP;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.nice.filehandler.config.FTPConfig;
@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Component
-public class OrderStatusScheduler {
+public class OrderExportScheduler {
 
-    private static final Logger logger = LoggerFactory.getLogger(OrderStatusScheduler.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrderExportScheduler.class);
 
     @Autowired
     private FTPConfig ftpConfig;
@@ -26,31 +26,31 @@ public class OrderStatusScheduler {
     @Value("${AWS_S3_BUCKET_NAME}")
     private String bucketName;
 
-    @Value("${ORDER_STATUS_ROOT_DIRECTORY}")
-    private String orderStatusRootDirectory;
+    @Value("${ORDER_EXPORT_ROOT_DIRECTORY}")
+    private String orderExportRootDirectory;
 
-    @Value("${ORDER_STATUS_DATA_DIRECTORY}")
-    private String orderStatusDataDirectory;
+    @Value("${ORDER_EXPORT_DATA_DIRECTORY}")
+    private String orderExportDataDirectory;
 
-    @Value("${ORDER_STATUS_PROCESSED_DIRECTORY}")
-    private String orderStatusProcessedDirectory;
+    @Value("${ORDER_EXPORT_PROCESSED_DIRECTORY}")
+    private String orderExportProcessedDirectory;
 
-    @Value("${ORDER_STATUS_FTP_DIRECTORY}")
-    private String orderStatusFTPDirectory;
+    @Value("${ORDER_EXPORT_FTP_DIRECTORY}")
+    private String orderExportFTPDirectory;
 
     @Value("${KEY_TO_PROCESS_BATCH_SIZE}")
     private Integer KEY_TO_PROCESS_BATCH_SIZE;
 
-    @Scheduled(fixedRate = 20000) // Run every 20 seconds
+//    @Scheduled(fixedRate = 10000) // Run every 10 seconds
     public void scheduleFileUpload() {
         // Get current system time
         LocalDateTime currentTime = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         // Log the cron job running along with the current system time
-        logger.info("OrderStatusScheduler cron job running at time = {}", formatter.format(currentTime));
+        logger.info("OrderExportScheduler cron job running at time = {}", formatter.format(currentTime));
 
         // Call the method to upload files from S3 to FTP
-        Utils.uploadFilesFromS3ToFTP(bucketName, orderStatusRootDirectory, orderStatusDataDirectory, orderStatusProcessedDirectory, orderStatusFTPDirectory, KEY_TO_PROCESS_BATCH_SIZE, ftpConfig, amazonS3, logger);
+        Utils.uploadFilesFromS3ToFTP(bucketName, orderExportRootDirectory, orderExportDataDirectory, orderExportProcessedDirectory, orderExportFTPDirectory, KEY_TO_PROCESS_BATCH_SIZE, ftpConfig, amazonS3, logger);
     }
 }

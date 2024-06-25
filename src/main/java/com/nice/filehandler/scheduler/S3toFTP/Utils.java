@@ -1,4 +1,4 @@
-package com.nice.filehandler.scheduler;
+package com.nice.filehandler.scheduler.S3toFTP;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
@@ -58,10 +58,10 @@ public class Utils {
             Utils.createFTPDirectoryIfNotExists(ftpClient, "/" + ftpDirectory, logger);
 
             // List files in S3 bucket under 'OrderExports/NewOrders' folder
-            String s3NewOrdersDirectory = rootDirectory + "/" + dataDirectory + "/";
+            String s3Directory = rootDirectory + "/" + dataDirectory + "/";
             ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
                     .withBucketName(bucketName)
-                    .withPrefix(s3NewOrdersDirectory)
+                    .withPrefix(s3Directory)
                     .withMaxKeys(KEY_TO_PROCESS_BATCH_SIZE);
 
             ObjectListing objectListing;
