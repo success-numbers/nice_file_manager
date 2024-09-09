@@ -24,7 +24,7 @@ aws.s3.region=ap-south-1
 ftp.server=localhost
 ftp.port=21
 ftp.username=admin
-ftp.password=w4l1elvMOwSX0jg-
+ftp.password=jWBCUw6zEkP3vHgv
 
 
 FTP_ROOT_DIRECTORY=order
