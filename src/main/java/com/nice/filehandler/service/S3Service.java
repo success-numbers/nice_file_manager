@@ -15,7 +15,7 @@ public class S3Service {
     @Autowired
     private AmazonS3 amazonS3;
 
-    @Value("${AWS_S3_BUCKET_NAME}")
+    @Value("${aws.s3.bucketname}")
     private String bucketName;
 
 
@@ -24,17 +24,17 @@ public class S3Service {
 
     }
 
-    public List<Bucket> getAllBuckets() {
-        return amazonS3.listBuckets();
-    }
-
-    public List<S3ObjectSummary> listFiles(String bucketName) {
-        ObjectListing objectListing = amazonS3.listObjects(bucketName);
-        return objectListing.getObjectSummaries();
-    }
-
-    public InputStream getFile(String bucketName, String keyName) {
-        S3Object s3Object = amazonS3.getObject(bucketName, keyName);
-        return s3Object.getObjectContent();
-    }
+//    public List<Bucket> getAllBuckets() {
+//        return amazonS3.listBuckets();
+//    }
+//
+//    public List<S3ObjectSummary> listFiles(String bucketName) {
+//        ObjectListing objectListing = amazonS3.listObjects(bucketName);
+//        return objectListing.getObjectSummaries();
+//    }
+//
+//    public InputStream getFile(String bucketName, String keyName) {
+//        S3Object s3Object = amazonS3.getObject(bucketName, keyName);
+//        return s3Object.getObjectContent();
+//    }
 }

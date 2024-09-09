@@ -2,17 +2,16 @@ package com.nice.filehandler.scheduler.S3toFTP;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.nice.filehandler.config.FTPConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component
-public class OrderExportScheduler {
-
-    private static final Logger logger = LoggerFactory.getLogger(OrderExportScheduler.class);
+public class OrderReturnScheduler {
+    private static final Logger logger = LoggerFactory.getLogger(OrderReturnScheduler.class);
 
     @Autowired
     private FTPConfig ftpConfig;
@@ -26,16 +25,16 @@ public class OrderExportScheduler {
     @Value("${aws.s3.bucketname}")
     private String s3BucketName;
 
-    @Value("${toRms.orders.order_exports.S3_PARENT_DIR}")
+    @Value("${toRms.orders.order_returns.S3_PARENT_DIR}")
     private String s3ParentDirectory;
 
-    @Value("${toRms.orders.order_exports.S3_DATA_DIR}")
+    @Value("${toRms.orders.order_returns.S3_DATA_DIR}")
     private String s3DataDirectory;
 
-    @Value("${toRms.orders.order_exports.S3_PROCESSED_DIR}")
+    @Value("${toRms.orders.order_returns.S3_PROCESSED_DIR}")
     private String s3ProcessedDirectory;
 
-    @Value("${toRms.orders.order_exports.FTP_PARENT_DIR}")
+    @Value("${toRms.orders.order_returns.FTP_PARENT_DIR}")
     private String ftpParentDirectory;
 
     @Value("${stores.amazon.storeId}")

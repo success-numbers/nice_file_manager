@@ -13,35 +13,35 @@ import java.util.List;
 @RequestMapping("/ftp")
 public class FTPController {
 
-    private final FTPService ftpService;
-
-    @Autowired
-    public FTPController(FTPService ftpService) {
-        this.ftpService = ftpService;
-    }
-
-    @GetMapping("/list")
-    public List<String> listFiles() {
-        return ftpService.listFiles();
-    }
-
-    @PostMapping("/upload")
-    public String uploadFile(@RequestParam("file") MultipartFile multipartFile) {
-        String localFilePath = System.getProperty("java.io.tmpdir") + "/" + multipartFile.getOriginalFilename();
-        try {
-            File localFile = new File(localFilePath);
-            multipartFile.transferTo(localFile);
-            ftpService.uploadFile(localFilePath, multipartFile.getOriginalFilename());
-            return "File uploaded successfully.";
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "File upload failed.";
-        }
-    }
-
-    @PostMapping("/cron")
-    public String uploadFile() {
-        ftpService.uploadFilesFromS3ToFTP();
-        return "success";
-    }
+//    private final FTPService ftpService;
+//
+//    @Autowired
+//    public FTPController(FTPService ftpService) {
+//        this.ftpService = ftpService;
+//    }
+//
+//    @GetMapping("/list")
+//    public List<String> listFiles() {
+//        return ftpService.listFiles();
+//    }
+//
+//    @PostMapping("/upload")
+//    public String uploadFile(@RequestParam("file") MultipartFile multipartFile) {
+//        String localFilePath = System.getProperty("java.io.tmpdir") + "/" + multipartFile.getOriginalFilename();
+//        try {
+//            File localFile = new File(localFilePath);
+//            multipartFile.transferTo(localFile);
+//            ftpService.uploadFile(localFilePath, multipartFile.getOriginalFilename());
+//            return "File uploaded successfully.";
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return "File upload failed.";
+//        }
+//    }
+//
+//    @PostMapping("/cron")
+//    public String uploadFile() {
+//        ftpService.uploadFilesFromS3ToFTP();
+//        return "success";
+//    }
 }

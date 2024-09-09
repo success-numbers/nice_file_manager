@@ -2,6 +2,7 @@ package com.nice.filehandler.scheduler.FTPtoS3;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.nice.filehandler.common.UtilsCommon;
 import com.nice.filehandler.config.FTPConfig;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -10,19 +11,48 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Utils {
 
     public static boolean moveFileInFTP(FTPClient ftpClient, String sourcePath, String destinationPath, Logger logger) {
         try {
-            return ftpClient.rename(sourcePath, destinationPath);
+            return ftpClient.rename("/" + sourcePath, "/" + destinationPath);
         } catch (IOException e) {
             logger.error("Exception occurred while moving file in FTP", e);
             return false;
         }
     }
 
-    public static void uploadFilesFromFTPToS3(String bucketName, String rootDirectory, String dataDirectory, String processedDirectory, String s3Directory, Integer KEY_TO_PROCESS_BATCH_SIZE, FTPConfig ftpConfig, AmazonS3 amazonS3, Logger logger) {
+    public static void schedulerUtil(String cronName,
+                                     String storeKey,
+                                     String s3BucketName,
+                                     String s3ParentDirectory,
+                                     String ftpParentDirectory, String ftpDataDirectory, String ftpProcessedDirectory,
+                                     Integer KEY_TO_PROCESS_BATCH_SIZE,
+                                     FTPConfig ftpConfig, AmazonS3 amazonS3, Logger logger) {
+        // Get current system time
+        LocalDateTime currentTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        // Log the cron job running along with the current system time
+        logger.info("{} cron job running at time = {}", cronName, formatter.format(currentTime));
+
+        String s3RootDir = s3ParentDirectory + "/" + storeKey;
+        String ftpRootDir = ftpParentDirectory + "/" + storeKey;
+
+        // Call the method to upload files from S3 to FTP
+        uploadFilesFromFTPToS3(s3BucketName,
+                ftpRootDir,
+                ftpDataDirectory,
+                ftpProcessedDirectory,
+                s3RootDir,
+                KEY_TO_PROCESS_BATCH_SIZE,
+                ftpConfig, amazonS3, logger);
+    }
+
+    public static void uploadFilesFromFTPToS3(String bucketName, String ftpRootDirectory, String ftpDataDirectory, String ftpProcessedDirectory, String s3Directory, Integer KEY_TO_PROCESS_BATCH_SIZE, FTPConfig ftpConfig, AmazonS3 amazonS3, Logger logger) {
         FTPClient ftpClient = new FTPClient();
         try {
             // Connect to FTP server
@@ -32,8 +62,10 @@ public class Utils {
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 
             // List files in FTP directory under 'rootDirectory/dataDirectory' folder
-            String ftpDirectory = rootDirectory + "/" + dataDirectory + "/";
+            String ftpDirectory = ftpRootDirectory + "/" + ftpDataDirectory + "/";
             FTPFile[] ftpFiles = ftpClient.listFiles(ftpDirectory);
+
+            logger.info("No of XML files in FTP to process = {}", ftpFiles.length);
 
             // Process files in batches
             int fileCount = 0;
@@ -55,13 +87,17 @@ public class Utils {
                         ftpClient.completePendingCommand();
                         logger.info("Uploaded to S3: {}", sourcePath);
 
+                        // Ensure the FTP processed directory exists
+                        String processedDir = ftpRootDirectory + "/" + ftpProcessedDirectory;
+                        UtilsCommon.createFTPDirectoryIfNotExists(ftpClient, "/" + processedDir, logger);
+
                         // Move file to 'processedDirectory' folder in FTP
-                        String processedPath = rootDirectory + "/" + processedDirectory + "/" + fileName;
+                        String processedPath = ftpRootDirectory + "/" + ftpProcessedDirectory + "/" + fileName;
                         boolean ftpMoveSuccess = Utils.moveFileInFTP(ftpClient, sourcePath, processedPath, logger);
                         if (ftpMoveSuccess) {
                             logger.info("Moved to processed folder in FTP: {}", processedPath);
                         } else {
-                            logger.error("Failed to move to processed folder in FTP: {}", sourcePath);
+                            logger.error("Failed to move to processed folder from FTP: {} to FTP: {}", sourcePath, processedPath);
                         }
                     } else {
                         logger.error("Failed to retrieve file: {}", sourcePath);

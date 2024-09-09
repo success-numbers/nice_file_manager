@@ -1,33 +1,57 @@
-spring.application.name=filehandler
+spring:
+  application:
+    name: filehandler
 
-AWS_S3_BUCKET_NAME=fynd-marketplace-dev--fynd-nice-sync-oms
+ftp:
+  server: localhost
+  port: 21
+  username: admin
+  password: GWboDq4YsO5PGfSW
 
-KEY_TO_PROCESS_BATCH_SIZE=10
+aws:
+  accessKeyId: your-access-key-id
+  secretKey: your-secret-access-key
+  s3:
+    region: ap-south-1
+    bucketname: fynd-marketplace-dev--fynd-nice-sync-oms
+
+KEY_TO_PROCESS_BATCH_SIZE: 10
+
+# ----------------------------------
+stores:
+  amazon:
+    storeId: 21002
+  noon:
+    storeId: 21001
+
+toRms:
+  orders:
+    order_exports:
+      S3_PARENT_DIR: OrderExports # in s3 in will be in respective store folder (example: OrderExports/amazon/)
+      S3_DATA_DIR: CurrentOrders # (OrderExports/amazon/NewOrders)
+      S3_PROCESSED_DIR: Processed # (OrderExports/amazon/Processed)
+      FTP_PARENT_DIR: toRMS/orders # in fpt in will be in respective store folder (example: toRMS/orders/amazon)
+    order_cancellation:
+      S3_PARENT_DIR: OrderCancellation
+      S3_DATA_DIR: CurrentOrders
+      S3_PROCESSED_DIR: Processed
+      FTP_PARENT_DIR: toRMS/orders
+    order_returns:
+      S3_PARENT_DIR: OrderReturns
+      S3_DATA_DIR: CurrentOrders
+      S3_PROCESSED_DIR: Processed
+      FTP_PARENT_DIR: toRMS/orders
+    order_delivered:
+      S3_PARENT_DIR: OrderDelivered
+      S3_DATA_DIR: CurrentOrders
+      S3_PROCESSED_DIR: Processed
+      FTP_PARENT_DIR: toRMS/orders
 
 
-ORDER_EXPORT_ROOT_DIRECTORY=OrderExports
-ORDER_EXPORT_DATA_DIRECTORY=NewOrders
-ORDER_EXPORT_PROCESSED_DIRECTORY=Processed
-ORDER_EXPORT_FTP_DIRECTORY=order/exports
-
-ORDER_STATUS_ROOT_DIRECTORY=OrderStatus
-ORDER_STATUS_DATA_DIRECTORY=NewOrders
-ORDER_STATUS_PROCESSED_DIRECTORY=Processed
-ORDER_STATUS_FTP_DIRECTORY=order/status
-
-aws.accessKeyId=your-access-key-id
-aws.secretKey=your-secret-access-key
-aws.s3.region=ap-south-1
-
-
-
-ftp.server=localhost
-ftp.port=21
-ftp.username=admin
-ftp.password=jWBCUw6zEkP3vHgv
-
-
-FTP_ROOT_DIRECTORY=order
-FTP_DATA_DIRECTORY=exports
-FTP_PROCESSED_DIRECTORY=processed
-S3_UPLOAD_DIRECTORY=ftpcontent
+fromRms:
+  inventory:
+    inventory_updates:
+      S3_PARENT_DIR: inventoryUpdates # in s3 in will go to respective store folder (example: inventoryUpdates/amazon/file.xml)
+      FTP_PARENT_DIR: fromRMS/inventory # in fpt in will be in respective store folder (example: toRMS/orders/amazon)
+      FTP_DATA_DIR: Data
+      FTP_PROCESSED_DIR: Processed

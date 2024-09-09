@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.nice.filehandler.common.UtilsCommon;
 import com.nice.filehandler.config.FTPConfig;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -12,28 +13,11 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class Utils {
-    public static void createFTPDirectoryIfNotExists(FTPClient ftpClient, String dirPath, Logger logger) throws IOException {
-        String[] pathElements = dirPath.split("/");
-        if (pathElements.length > 0) {
-            StringBuilder path = new StringBuilder();
-            for (String singleDir : pathElements) {
-                if (!singleDir.isEmpty()) {
-                    path.append("/").append(singleDir);
-                    if (!ftpClient.changeWorkingDirectory(path.toString())) {
-                        if (ftpClient.makeDirectory(path.toString())) {
-                            logger.info("Created directory: {}", path.toString());
-                        } else {
-                            logger.error("Failed to create directory: {}", path.toString());
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     public static boolean moveFileInS3(String bucketName, String sourceKey, String destinationKey, AmazonS3 amazonS3, Logger logger) {
         try {
             amazonS3.copyObject(bucketName, sourceKey, bucketName, destinationKey);
@@ -45,7 +29,36 @@ public class Utils {
         }
     }
 
-    public static void uploadFilesFromS3ToFTP(String bucketName, String rootDirectory, String dataDirectory, String processedDirectory, String ftpDirectory, Integer KEY_TO_PROCESS_BATCH_SIZE, FTPConfig ftpConfig, AmazonS3 amazonS3, Logger logger) {
+    public static void schedulerUtil(String cronName,
+                                     String storeKey,
+                                     String s3BucketName,
+                                     String s3ParentDirectory, String s3DataDirectory, String s3ProcessedDirectory,
+                                     String ftpParentDirectory,
+                                     Integer KEY_TO_PROCESS_BATCH_SIZE,
+                                     FTPConfig ftpConfig, AmazonS3 amazonS3, Logger logger) {
+        // Get current system time
+        LocalDateTime currentTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        // Log the cron job running along with the current system time
+        logger.info("{} cron job running at time = {}", cronName, formatter.format(currentTime));
+
+        String s3RootDir = s3ParentDirectory + "/" + storeKey;
+        String ftpRootDir = ftpParentDirectory + "/" + storeKey;
+
+        // Call the method to upload files from S3 to FTP
+        uploadFilesFromS3ToFTP(s3BucketName,
+                s3RootDir, s3DataDirectory, s3ProcessedDirectory,
+                ftpRootDir,
+                KEY_TO_PROCESS_BATCH_SIZE,
+                ftpConfig, amazonS3, logger);
+    }
+
+    public static void uploadFilesFromS3ToFTP(String s3BucketName,
+                                              String s3RootDirectory, String s3DataDirectory, String s3ProcessedDirectory,
+                                              String ftpRootDir,
+                                              Integer KEY_TO_PROCESS_BATCH_SIZE,
+                                              FTPConfig ftpConfig, AmazonS3 amazonS3, Logger logger) {
         FTPClient ftpClient = new FTPClient();
         try {
             // Connect to FTP server
@@ -55,12 +68,12 @@ public class Utils {
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 
             // Ensure the FTP directory exists
-            Utils.createFTPDirectoryIfNotExists(ftpClient, "/" + ftpDirectory, logger);
+            UtilsCommon.createFTPDirectoryIfNotExists(ftpClient, "/" + ftpRootDir, logger);
 
             // List files in S3 bucket under 'OrderExports/NewOrders' folder
-            String s3Directory = rootDirectory + "/" + dataDirectory + "/";
+            String s3Directory = s3RootDirectory + "/" + s3DataDirectory + "/";
             ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-                    .withBucketName(bucketName)
+                    .withBucketName(s3BucketName)
                     .withPrefix(s3Directory)
                     .withMaxKeys(KEY_TO_PROCESS_BATCH_SIZE);
 
@@ -82,16 +95,16 @@ public class Utils {
                     String fileName = key.substring(key.lastIndexOf("/") + 1);
 
                     logger.info("Processing key = {}", key);
-                    S3Object s3Object = amazonS3.getObject(bucketName, key);
+                    S3Object s3Object = amazonS3.getObject(s3BucketName, key);
                     try (InputStream inputStream = s3Object.getObjectContent()) {
-                        boolean ftpUploadSuccess = ftpClient.storeFile("/" + ftpDirectory + "/" + fileName, inputStream);
+                        boolean ftpUploadSuccess = ftpClient.storeFile("/" + ftpRootDir + "/" + fileName, inputStream);
 
                         if (ftpUploadSuccess) {
                             logger.info("Uploaded to FTP: {}", key);
 
                             // Move file to 'OrderExports/Processed' folder
-                            String processedKey = rootDirectory + "/" + processedDirectory + "/" + fileName;
-                            boolean s3MoveSuccess = Utils.moveFileInS3(bucketName, key, processedKey, amazonS3, logger);
+                            String processedKey = s3RootDirectory + "/" + s3ProcessedDirectory + "/" + fileName;
+                            boolean s3MoveSuccess = Utils.moveFileInS3(s3BucketName, key, processedKey, amazonS3, logger);
                             if (s3MoveSuccess) {
                                 logger.info("Moved to processed folder in S3: {}", processedKey);
                             } else {
