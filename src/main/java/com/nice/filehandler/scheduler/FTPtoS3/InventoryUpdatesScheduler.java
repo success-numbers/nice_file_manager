@@ -59,7 +59,7 @@ public class InventoryUpdatesScheduler {
     @Scheduled(fixedRate = 10000) // Run every 10 seconds
     public void noonFptToS3FileUploadScheduler() {
         Utils.schedulerUtil("[NoonFptToS3FileUploadScheduler]",
-                amazonStoreId,
+                noonStoreId,
                 s3BucketName,
                 s3ParentDirectory,
                 ftpParentDirectory, ftpDataDirectory, ftpProcessedDirectory,

@@ -62,16 +62,22 @@ public class Utils {
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 
             // List files in FTP directory under 'rootDirectory/dataDirectory' folder
-            String ftpDirectory = ftpRootDirectory + "/" + ftpDataDirectory + "/";
+
+            // currently we are not using ftpDataDirectory
+            // String ftpDirectory = ftpRootDirectory + "/" + ftpDataDirectory + "/";
+            String ftpDirectory = ftpRootDirectory + "/";
             FTPFile[] ftpFiles = ftpClient.listFiles(ftpDirectory);
 
-            logger.info("No of XML files in FTP to process = {}", ftpFiles.length);
+            logger.info("No of XML files (+directories which will be ignored) in FTP to process = {}", ftpFiles.length);
 
             // Process files in batches
             int fileCount = 0;
             for (FTPFile ftpFile : ftpFiles) {
                 if (fileCount >= KEY_TO_PROCESS_BATCH_SIZE) break;
-                if (!ftpFile.isFile()) continue;
+                if (!ftpFile.isFile()) {
+                    // this check is added so that directories are not included here
+                    continue;
+                }
 
                 String fileName = ftpFile.getName();
                 String sourcePath = ftpDirectory + fileName;

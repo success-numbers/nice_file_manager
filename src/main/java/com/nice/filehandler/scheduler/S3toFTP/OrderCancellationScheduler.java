@@ -43,7 +43,7 @@ public class OrderCancellationScheduler {
     @Value("${stores.noon.storeId}")
     private String noonStoreId;
 
-    @Scheduled(fixedRate = 10000) // Run every 10 seconds
+//    @Scheduled(fixedRate = 10000) // Run every 10 seconds
     public void amazonFileUploadScheduler() {
         Utils.schedulerUtil("[AmazonFileUploadScheduler]",
                 amazonStoreId,
@@ -54,7 +54,7 @@ public class OrderCancellationScheduler {
                 ftpConfig, amazonS3, logger);
     }
 
-    @Scheduled(fixedRate = 10000) // Run every 10 seconds
+//    @Scheduled(fixedRate = 10000) // Run every 10 seconds
     public void noonFileUploadScheduler() {
         Utils.schedulerUtil("[NoonFileUploadScheduler]",
                 noonStoreId,
