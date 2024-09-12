@@ -53,5 +53,11 @@ fromRms:
     inventory_updates:
       S3_PARENT_DIR: InventoryUpdates # in s3 in will go to respective store folder (example: inventoryUpdates/amazon/file.xml)
       FTP_PARENT_DIR: fromRMS/inventory # in fpt in will be in respective store folder (example: toRMS/orders/amazon)
-      FTP_DATA_DIR: Data # currently not using data directory, files are directly put in FTP_PARENT_DIR. But processed files will be moved to FTP_PROCESSED_DIR
-      FTP_PROCESSED_DIR: Processed
+      FTP_DATA_DIR: data # currently not using data directory, files are directly put in FTP_PARENT_DIR. But processed files will be moved to FTP_PROCESSED_DIR
+      FTP_PROCESSED_DIR: processed
+  order_status:
+    order_status_updates:
+      S3_PARENT_DIR: OmsOrderUpdates
+      FTP_PARENT_DIR: fromRMS/orderstatus
+      FTP_DATA_DIR: data
+      FTP_PROCESSED_DIR: processed
