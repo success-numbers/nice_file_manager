@@ -11,8 +11,9 @@
 	<groupId>com.nice</groupId>
 	<artifactId>filehandler</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
 	<name>filehandler</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Nice File Handler</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>
