@@ -44,8 +44,7 @@ public class InventoryUpdatesScheduler {
     @Value("${stores.noon.storeId}")
     private String noonStoreId;
 
-
-    @Scheduled(fixedRate = 10000) // Run every 10 seconds
+    @Scheduled(cron = "${scheduler.cron-every-10-sec}")
     public void amazonFtpToS3FileUploadScheduler() {
         Utils.schedulerUtil("[AmazonFtpToS3FileUploadScheduler]",
                 amazonStoreId,
@@ -56,7 +55,7 @@ public class InventoryUpdatesScheduler {
                 ftpConfig, amazonS3, logger);
     }
 
-    @Scheduled(fixedRate = 10000) // Run every 10 seconds
+    @Scheduled(cron = "${scheduler.cron-every-10-sec}")
     public void noonFptToS3FileUploadScheduler() {
         Utils.schedulerUtil("[NoonFptToS3FileUploadScheduler]",
                 noonStoreId,

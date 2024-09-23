@@ -6,7 +6,7 @@ ftp:
   server: localhost
   port: 21
   username: admin
-  password: cZLu7pgdQbGCY9zF
+  password: HtQZA-C-nsSQQVuv
 
 aws:
   accessKeyId: your-access-key-id
@@ -61,3 +61,19 @@ fromRms:
       FTP_PARENT_DIR: fromRMS/orderstatus
       FTP_DATA_DIR: data
       FTP_PROCESSED_DIR: processed
+
+scheduler:
+  cron-every-5-min: "0 0/5 * * * *"
+  cron-every-10-sec: "*/10 * * * * *"
+
+# logging:
+#   level:
+#     root: INFO
+#     org.springframework.web: DEBUG
+#   file:
+#     name: logs/application.log
+#     max-size: 10MB
+#     max-history: 10
+#   pattern:
+#     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+#     file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

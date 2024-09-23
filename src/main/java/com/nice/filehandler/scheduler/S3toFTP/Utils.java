@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
 import java.util.List;
 
 public class Utils {
@@ -86,7 +87,14 @@ public class Utils {
                 // s3ObjectSummaries.removeIf(summary -> summary.getKey().endsWith("/") || !summary.getKey().endsWith(".xml"));
 
                 // Filter out folders
-                s3ObjectSummaries.removeIf(summary -> summary.getKey().endsWith("/"));
+//                s3ObjectSummaries.removeIf(summary -> summary.getKey().endsWith("/"));
+                Iterator<S3ObjectSummary> iterator = s3ObjectSummaries.iterator();
+                while (iterator.hasNext()) {
+                    S3ObjectSummary summary = iterator.next();
+                    if (summary.getKey().endsWith("/")) {
+                        iterator.remove();
+                    }
+                }
 
                 logger.info("No of XML files in S3 to process = {}", s3ObjectSummaries.size());
 
