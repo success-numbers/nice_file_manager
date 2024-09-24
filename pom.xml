@@ -1,66 +1,95 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.0</version>
+		<!-- Downgrade Spring Boot version to a 1.5.x release (last compatible with Java 6) -->
+		<version>1.5.22.RELEASE</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
+
 	<groupId>com.nice</groupId>
 	<artifactId>filehandler</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>war</packaging>
 	<name>filehandler</name>
 	<description>Nice File Handler</description>
+
 	<properties>
-		<java.version>17</java.version>
+		<!-- Set Java version to 1.6 for WebLogic compatibility -->
+		<java.version>1.6</java.version>
 	</properties>
+
 	<dependencies>
+		<!-- Spring Boot Web Starter (compatible with Java 6 in Spring Boot 1.5.x) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
+		<!-- Test starter (Downgrade for compatibility with Java 6) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+			<!-- Version lock to ensure compatibility with Java 6 -->
+			<version>1.5.22.RELEASE</version>
 		</dependency>
 
+		<!-- Lombok (may not fully support Java 6; check for compatibility) -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
 
+		<!-- AWS SDK BOM (downgrade for compatibility with Java 6) -->
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-bom</artifactId>
-			<version>1.12.664</version>
+			<version>1.11.704</version> <!-- Downgrade version -->
 			<type>pom</type>
 			<scope>import</scope>
 		</dependency>
+
+		<!-- AWS S3 SDK (downgrade for compatibility with Java 6) -->
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-s3</artifactId>
-			<version>1.12.664</version>
+			<version>1.11.704</version> <!-- Downgrade version -->
 		</dependency>
+
+		<!-- Apache Commons Net (compatible with Java 6) -->
 		<dependency>
 			<groupId>commons-net</groupId>
 			<artifactId>commons-net</artifactId>
-			<version>3.8.0</version>
+			<version>3.3</version> <!-- Downgrade to an older version that supports Java 6 -->
 		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
+			<!-- Spring Boot Maven Plugin -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>1.5.22.RELEASE</version> <!-- Ensure compatibility with Spring Boot 1.5.x -->
+			</plugin>
+
+			<!-- Maven Compiler Plugin (ensure compilation for Java 1.6) -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.0</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
