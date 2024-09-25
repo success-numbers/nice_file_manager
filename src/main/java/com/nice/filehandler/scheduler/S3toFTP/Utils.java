@@ -13,12 +13,13 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
 public class Utils {
+
     public static boolean moveFileInS3(String bucketName, String sourceKey, String destinationKey, AmazonS3 amazonS3, Logger logger) {
         try {
             amazonS3.copyObject(bucketName, sourceKey, bucketName, destinationKey);
@@ -38,11 +39,11 @@ public class Utils {
                                      Integer KEY_TO_PROCESS_BATCH_SIZE,
                                      FTPConfig ftpConfig, AmazonS3 amazonS3, Logger logger) {
         // Get current system time
-        LocalDateTime currentTime = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        Calendar currentTime = Calendar.getInstance();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         // Log the cron job running along with the current system time
-        logger.info("{} cron job running at time = {}", cronName, formatter.format(currentTime));
+        logger.info("{} cron job running at time = {}", cronName, formatter.format(currentTime.getTime()));
 
         String s3RootDir = s3ParentDirectory + "/" + storeKey;
         String ftpRootDir = ftpParentDirectory + "/" + storeKey;
@@ -61,6 +62,7 @@ public class Utils {
                                               Integer KEY_TO_PROCESS_BATCH_SIZE,
                                               FTPConfig ftpConfig, AmazonS3 amazonS3, Logger logger) {
         FTPClient ftpClient = new FTPClient();
+        InputStream inputStream = null;
         try {
             // Connect to FTP server
             ftpClient.connect(ftpConfig.getServer(), ftpConfig.getPort());
@@ -83,11 +85,7 @@ public class Utils {
                 objectListing = amazonS3.listObjects(listObjectsRequest);
                 List<S3ObjectSummary> s3ObjectSummaries = objectListing.getObjectSummaries();
 
-                // Filter out folders and non-XML files
-                // s3ObjectSummaries.removeIf(summary -> summary.getKey().endsWith("/") || !summary.getKey().endsWith(".xml"));
-
                 // Filter out folders
-//                s3ObjectSummaries.removeIf(summary -> summary.getKey().endsWith("/"));
                 Iterator<S3ObjectSummary> iterator = s3ObjectSummaries.iterator();
                 while (iterator.hasNext()) {
                     S3ObjectSummary summary = iterator.next();
@@ -104,7 +102,8 @@ public class Utils {
 
                     logger.info("Processing key = {}", key);
                     S3Object s3Object = amazonS3.getObject(s3BucketName, key);
-                    try (InputStream inputStream = s3Object.getObjectContent()) {
+                    try {
+                        inputStream = s3Object.getObjectContent();
                         boolean ftpUploadSuccess = ftpClient.storeFile("/" + ftpRootDir + "/" + fileName, inputStream);
 
                         if (ftpUploadSuccess) {
@@ -120,6 +119,16 @@ public class Utils {
                             }
                         } else {
                             logger.error("Failed to upload: {}", key);
+                        }
+                    } catch (IOException e) {
+                        logger.error("Exception occurred while processing file: {}", key, e);
+                    } finally {
+                        if (inputStream != null) {
+                            try {
+                                inputStream.close();
+                            } catch (IOException e) {
+                                logger.error("Exception occurred while closing input stream", e);
+                            }
                         }
                     }
                 }

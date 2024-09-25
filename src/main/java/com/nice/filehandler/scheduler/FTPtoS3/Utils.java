@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class Utils {
 
@@ -33,11 +33,11 @@ public class Utils {
                                      Integer KEY_TO_PROCESS_BATCH_SIZE,
                                      FTPConfig ftpConfig, AmazonS3 amazonS3, Logger logger) {
         // Get current system time
-        LocalDateTime currentTime = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        Calendar currentTime = Calendar.getInstance();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         // Log the cron job running along with the current system time
-        logger.info("{} cron job running at time = {}", cronName, formatter.format(currentTime));
+        logger.info("{} cron job running at time = {}", cronName, formatter.format(currentTime.getTime()));
 
         String s3RootDir = s3ParentDirectory + "/" + storeKey;
         String ftpRootDir = ftpParentDirectory + "/" + storeKey;
@@ -54,6 +54,7 @@ public class Utils {
 
     public static void uploadFilesFromFTPToS3(String bucketName, String ftpRootDirectory, String ftpDataDirectory, String ftpProcessedDirectory, String s3Directory, Integer KEY_TO_PROCESS_BATCH_SIZE, FTPConfig ftpConfig, AmazonS3 amazonS3, Logger logger) {
         FTPClient ftpClient = new FTPClient();
+        InputStream inputStream = null;
         try {
             // Connect to FTP server
             ftpClient.connect(ftpConfig.getServer(), ftpConfig.getPort());
@@ -85,7 +86,8 @@ public class Utils {
 
                 logger.info("Processing file = {}", sourcePath);
 
-                try (InputStream inputStream = ftpClient.retrieveFileStream(sourcePath)) {
+                try {
+                    inputStream = ftpClient.retrieveFileStream(sourcePath);
                     if (inputStream != null) {
                         ObjectMetadata metadata = new ObjectMetadata();
                         metadata.setContentLength(ftpFile.getSize());
@@ -107,6 +109,16 @@ public class Utils {
                         }
                     } else {
                         logger.error("Failed to retrieve file: {}", sourcePath);
+                    }
+                } catch (IOException e) {
+                    logger.error("Exception occurred while processing file: {}", sourcePath, e);
+                } finally {
+                    if (inputStream != null) {
+                        try {
+                            inputStream.close();
+                        } catch (IOException e) {
+                            logger.error("Exception occurred while closing input stream", e);
+                        }
                     }
                 }
                 fileCount++;
