@@ -15,7 +15,7 @@
 	<groupId>com.nice</groupId>
 	<artifactId>filehandler</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>filehandler</name>
 	<description>Nice File Handler</description>
 
