@@ -1,0 +1,63 @@
+ftp:
+  server: localhost
+  port: 21
+  username: admin
+  password: S3KGPDtbh3xIzVgv
+
+aws:
+  accessKeyId: text
+  secretKey: text
+  s3:
+    region: ap-south-1
+    bucketname: fynd-marketplace-dev--fynd-nice-sync-oms
+
+KEY_TO_PROCESS_BATCH_SIZE: 10
+
+# ----------------------------------
+stores:
+  amazon:
+    storeId: 21002
+  noon:
+    storeId: 21001
+
+toRms:
+  orders:
+    order_exports:
+      S3_PARENT_DIR: OrderExports # in s3 in will be in respective store folder (example: OrderExports/amazon/)
+      S3_DATA_DIR: CurrentOrders # (OrderExports/amazon/NewOrders)
+      S3_PROCESSED_DIR: Processed # (OrderExports/amazon/Processed)
+      FTP_PARENT_DIR: dev/toRMS/orders # in fpt in will be in respective store folder (example: toRMS/orders/amazon)
+    order_cancellation:
+      S3_PARENT_DIR: OrderCancellation
+      S3_DATA_DIR: CurrentOrders
+      S3_PROCESSED_DIR: Processed
+      FTP_PARENT_DIR: dev/toRMS/orders
+    order_returns:
+      S3_PARENT_DIR: OrderReturns
+      S3_DATA_DIR: CurrentOrders
+      S3_PROCESSED_DIR: Processed
+      FTP_PARENT_DIR: dev/toRMS/orders
+    order_delivered:
+      S3_PARENT_DIR: OrderDelivered
+      S3_DATA_DIR: CurrentOrders
+      S3_PROCESSED_DIR: Processed
+      FTP_PARENT_DIR: dev/toRMS/orders
+
+
+fromRms:
+  inventory:
+    inventory_updates:
+      S3_PARENT_DIR: InventoryUpdates # in s3 in will go to respective store folder (example: inventoryUpdates/amazon/file.xml)
+      FTP_PARENT_DIR: dev/fromRMS/inventory # in fpt in will be in respective store folder (example: toRMS/orders/amazon)
+      FTP_DATA_DIR: data # currently not using data directory, files are directly put in FTP_PARENT_DIR. But processed files will be moved to FTP_PROCESSED_DIR
+      FTP_PROCESSED_DIR: processed
+  order_status:
+    order_status_updates:
+      S3_PARENT_DIR: OmsOrderUpdates
+      FTP_PARENT_DIR: dev/fromRMS/orderstatus
+      FTP_DATA_DIR: data
+      FTP_PROCESSED_DIR: processed
+
+scheduler:
+  cron-every-5-min: "0 0/5 * * * *"
+  cron-every-10-sec: "*/10 * * * * *"
