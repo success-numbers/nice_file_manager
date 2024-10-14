@@ -6,7 +6,7 @@ ftp:
   server: localhost
   port: 21
   username: admin
-  password: l6XsbX1P418EDUYn
+  password: cpFEt7cB5zqjeKA1
 
 aws:
   accessKeyId: text
@@ -42,10 +42,10 @@ toRms:
       S3_PROCESSED_DIR: Processed
       FTP_PARENT_DIR: ${marketplace}/${env}/<STORE_ID>/toRMS/returns
     order_rto_returns:
-      S3_PARENT_DIR: OrderCustomerReturns
+      S3_PARENT_DIR: OrderRTOReturns
       S3_DATA_DIR: CurrentOrders
       S3_PROCESSED_DIR: Processed
-      FTP_PARENT_DIR: ${marketplace}/${env}/<STORE_ID>/toRMS/returns
+      FTP_PARENT_DIR: ${marketplace}/${env}/<STORE_ID>/toRMS/returntoorigin
     order_delivered:
       S3_PARENT_DIR: OrderDelivered
       S3_DATA_DIR: CurrentOrders

@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -42,7 +43,7 @@ public class OrderCustomerReturnScheduler {
     @Value("${stores.noon.storeId}")
     private String noonStoreId;
 
-//    @Scheduled(fixedRate = 10000) // Run every 10 seconds
+    @Scheduled(cron = "${scheduler.cron-every-10-sec}")
     public void amazonFileUploadScheduler() {
         Utils.schedulerUtil("[AmazonFileUploadScheduler]",
                 amazonStoreId,
@@ -53,7 +54,7 @@ public class OrderCustomerReturnScheduler {
                 ftpConfig, amazonS3, logger);
     }
 
-//    @Scheduled(fixedRate = 10000) // Run every 10 seconds
+    @Scheduled(cron = "${scheduler.cron-every-10-sec}")
     public void noonFileUploadScheduler() {
         Utils.schedulerUtil("[NoonFileUploadScheduler]",
                 noonStoreId,
