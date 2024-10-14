@@ -40,7 +40,8 @@ public class Utils {
         logger.info("{} cron job running at time = {}", cronName, formatter.format(currentTime));
 
         String s3RootDir = s3ParentDirectory + "/" + storeKey;
-        String ftpRootDir = ftpParentDirectory + "/" + storeKey;
+//        String ftpRootDir = ftpParentDirectory + "/" + storeKey;
+        String ftpRootDir = ftpParentDirectory.replace("<STORE_ID>", storeKey);
 
         // Call the method to upload files from S3 to FTP
         uploadFilesFromFTPToS3(s3BucketName,

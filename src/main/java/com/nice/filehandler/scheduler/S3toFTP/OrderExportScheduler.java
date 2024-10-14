@@ -44,7 +44,7 @@ public class OrderExportScheduler {
     @Value("${stores.noon.storeId}")
     private String noonStoreId;
 
-//    @Scheduled(cron = "${scheduler.cron-every-10-sec}")
+    @Scheduled(cron = "${scheduler.cron-every-10-sec}")
     public void amazonFileUploadScheduler() {
         Utils.schedulerUtil("[AmazonFileUploadScheduler]",
                 amazonStoreId,
@@ -55,7 +55,7 @@ public class OrderExportScheduler {
                 ftpConfig, amazonS3, logger);
     }
 
-//    @Scheduled(cron = "${scheduler.cron-every-10-sec}")
+    @Scheduled(cron = "${scheduler.cron-every-10-sec}")
     public void noonFileUploadScheduler() {
         Utils.schedulerUtil("[NoonFileUploadScheduler]",
                 noonStoreId,
