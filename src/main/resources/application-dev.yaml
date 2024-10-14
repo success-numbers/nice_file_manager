@@ -35,17 +35,22 @@ toRms:
       S3_PARENT_DIR: OrderCancellation
       S3_DATA_DIR: CurrentOrders
       S3_PROCESSED_DIR: Processed
-      FTP_PARENT_DIR: ${marketplace}/${env}/<STORE_ID>/toRMS/orders
-    order_returns:
-      S3_PARENT_DIR: OrderReturns
+      FTP_PARENT_DIR: ${marketplace}/${env}/<STORE_ID>/toRMS/cancel
+    order_customer_returns:
+      S3_PARENT_DIR: OrderCustomerReturns
       S3_DATA_DIR: CurrentOrders
       S3_PROCESSED_DIR: Processed
-      FTP_PARENT_DIR: ${marketplace}/${env}/<STORE_ID>/toRMS/orders
+      FTP_PARENT_DIR: ${marketplace}/${env}/<STORE_ID>/toRMS/returns
+    order_rto_returns:
+      S3_PARENT_DIR: OrderCustomerReturns
+      S3_DATA_DIR: CurrentOrders
+      S3_PROCESSED_DIR: Processed
+      FTP_PARENT_DIR: ${marketplace}/${env}/<STORE_ID>/toRMS/returns
     order_delivered:
       S3_PARENT_DIR: OrderDelivered
       S3_DATA_DIR: CurrentOrders
       S3_PROCESSED_DIR: Processed
-      FTP_PARENT_DIR: ${marketplace}/${env}/<STORE_ID>/toRMS/orders
+      FTP_PARENT_DIR: ${marketplace}/${env}/<STORE_ID>/toRMS/deliveryupdate
 
 
 fromRms:
