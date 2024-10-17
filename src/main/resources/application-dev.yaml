@@ -3,10 +3,10 @@ env: dev
 marketplace: fynd
 
 ftp:
-  server: localhost
-  port: 21
-  username: admin
-  password: cpFEt7cB5zqjeKA1
+  server: 192.168.1.71
+  port: 22
+  username: nicesftp1
+  password: N!c$_@1234$FTP
 
 aws:
   accessKeyId: text

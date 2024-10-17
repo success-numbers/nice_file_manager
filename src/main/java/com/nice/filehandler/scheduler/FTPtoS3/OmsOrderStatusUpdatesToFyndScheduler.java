@@ -45,7 +45,7 @@ public class OmsOrderStatusUpdatesToFyndScheduler {
     private String noonStoreId;
 
 
-    @Scheduled(cron = "${scheduler.cron-every-10-sec}")
+//    @Scheduled(cron = "${scheduler.cron-every-10-sec}")
     public void amazonFtpToS3FileUploadScheduler() {
         Utils.schedulerUtil("[AmazonFtpToS3FileUploadScheduler]",
                 amazonStoreId,
@@ -56,7 +56,7 @@ public class OmsOrderStatusUpdatesToFyndScheduler {
                 ftpConfig, amazonS3, logger);
     }
 
-    @Scheduled(cron = "${scheduler.cron-every-10-sec}")
+//    @Scheduled(cron = "${scheduler.cron-every-10-sec}")
     public void noonFptToS3FileUploadScheduler() {
         Utils.schedulerUtil("[NoonFptToS3FileUploadScheduler]",
                 noonStoreId,
